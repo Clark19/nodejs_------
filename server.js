@@ -3,6 +3,7 @@ var fs = require("fs");
 const url = require("url");
 const qs = require("querystring");
 const template = require("./lib/template");
+const path = require("path");
 
 var app = http.createServer(async function (request, response) {
   var _url = request.url;
@@ -30,7 +31,8 @@ var app = http.createServer(async function (request, response) {
       response.writeHead(200);
       response.end(html);
     } else {
-      fs.readFile(`data/${queryData.id}`, "utf-8", async (err, description) => {
+      const filteredId = path.parse(queryData.id).base;
+      fs.readFile(`data/${filteredId}`, "utf-8", async (err, description) => {
         const title = queryData.id;
         const files = await fs.readdirSync("./data");
         if (!files) console.log("파일들 없음");
@@ -86,7 +88,8 @@ var app = http.createServer(async function (request, response) {
       post = qs.parse(body);
       const { title, description } = post;
       console.log(post);
-      fs.writeFile(`data/${title}`, description, "utf-8", (err) => {
+      const filteredTitle = path.parse(title).base;
+      fs.writeFile(`data/${filteredTitle}`, description, "utf-8", (err) => {
         if (err) throw err;
         console.log("The file has been saved.");
         response.writeHead(302, { Location: `/?id=${encodeURI(title)}` });
@@ -94,8 +97,9 @@ var app = http.createServer(async function (request, response) {
       });
     });
   } else if (pathname === "/update") {
-    fs.readFile(`data/${queryData.id}`, "utf-8", async (err, description) => {
-      const title = queryData.id;
+    const filteredId = path.parse(queryData.id).base;
+    fs.readFile(`data/${filteredId}`, "utf-8", async (err, description) => {
+      const title = filteredId;
       const files = await fs.readdirSync("./data");
       if (!files) console.log("파일들 없음");
       const list = template.list(files);
@@ -129,13 +133,17 @@ var app = http.createServer(async function (request, response) {
       post = qs.parse(body);
       const { id, title, description } = post;
       console.log(post);
-      fs.rename(`data/${id}`, `data/${title}`, (err) => {
+      const filteredId = path.parse(id).base;
+      const filteredTitle = path.parse(title).base;
+      fs.rename(`data/${filteredId}`, `data/${filteredTitle}`, (err) => {
         if (err) throw err;
         console.log("File renamed1");
-        fs.writeFile(`data/${title}`, description, "utf-8", (err) => {
+        fs.writeFile(`data/${filteredTitle}`, description, "utf-8", (err) => {
           if (err) throw err;
           console.log("The file has been saved.");
-          response.writeHead(302, { Location: `/?id=${encodeURI(title)}` });
+          response.writeHead(302, {
+            Location: `/?id=${encodeURI(filteredTitle)}`,
+          });
           response.end();
         });
       });
@@ -150,8 +158,9 @@ var app = http.createServer(async function (request, response) {
     request.on("end", function () {
       post = qs.parse(body);
       const id = post.id;
-      console.log(post);
-      fs.unlink(`data/${id}`, async (err) => {
+      console.log("삭제:", post);
+      const filteredId = path.parse(id).base;
+      fs.unlink(`data/${filteredId}`, async (err) => {
         if (err) throw err;
         console.log("File deleted.");
         response.writeHead(302, { Location: `/` });
