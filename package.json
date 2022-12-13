@@ -1,7 +1,8 @@
 {
   "scripts": {
     "dev": "nodemon server.js",
-    "pm2": "concurrently \"pm2 log\" \"pm2 start server.js --watch\""
+    "pm2": "pm2 start server.js --watch --ignore-watch=\"data/*\" --no-daemon",
+    "pm2:prod": "pm2 start server.js"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"
