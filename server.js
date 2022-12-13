@@ -3,7 +3,8 @@ var fs = require("fs");
 const url = require("url");
 const qs = require("querystring");
 const template = require("./lib/template");
-const path = require("path");
+const path = require("path"); // 사용자로 부터 들어오는 입력정보 보안 위해 사용.
+const sanitizeHtml = require("sanitize-html"); // 출력 정보에 대한 보안을 위해 사용(XSS)
 
 var app = http.createServer(async function (request, response) {
   var _url = request.url;
@@ -33,7 +34,11 @@ var app = http.createServer(async function (request, response) {
     } else {
       const filteredId = path.parse(queryData.id).base;
       fs.readFile(`data/${filteredId}`, "utf-8", async (err, description) => {
-        const title = queryData.id;
+        const title = sanitizeHtml(queryData.id);
+        description = sanitizeHtml(description);
+        // description = sanitizeHtml(description, {
+        //   allowedTags: sanitizeHtml.defaults.allowedTags.concat(["h1"]),
+        // });
         const files = await fs.readdirSync("./data");
         if (!files) console.log("파일들 없음");
         const list = template.list(files);

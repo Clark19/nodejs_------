@@ -1,8 +1,13 @@
 {
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "pm2": "concurrently \"pm2 log\" \"pm2 start server.js --watch\""
   },
   "devDependencies": {
     "nodemon": "^2.0.20"
+  },
+  "dependencies": {
+    "concurrently": "^7.6.0",
+    "sanitize-html": "^2.8.0"
   }
 }
