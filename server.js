@@ -2,33 +2,7 @@ var http = require("http");
 var fs = require("fs");
 const url = require("url");
 const qs = require("querystring");
-
-function templateHTML(title, list, body, control) {
-  return `
-  <!doctype html>
-  <html>
-  <head>
-    <title>WEB1 - ${title}</title>
-    <meta charset="utf-8">
-  </head>
-  <body>
-    <h1><a href="/">WEB</a></h1>
-    ${list}
-    ${control}
-    ${body}
-  </body>
-  </html>
-`;
-}
-
-const templateList = (files) => {
-  let list = "<ul>";
-  files.forEach(
-    (file) => (list += `<li><a href="/?id=${file}">${file}</a></li>`)
-  );
-  list += "</ul>";
-  return list;
-};
+const template = require("./lib/template");
 
 var app = http.createServer(async function (request, response) {
   var _url = request.url;
@@ -45,8 +19,8 @@ var app = http.createServer(async function (request, response) {
       const description = "Hello, Node.js";
       const files = await fs.readdirSync("./data");
       if (!files) console.log("파일들 없음");
-      const list = templateList(files);
-      const template = templateHTML(
+      const list = template.list(files);
+      const html = template.html(
         title,
         list,
         `<h2>${title}</h2>${description}`,
@@ -54,22 +28,28 @@ var app = http.createServer(async function (request, response) {
       );
 
       response.writeHead(200);
-      response.end(template);
+      response.end(html);
     } else {
       fs.readFile(`data/${queryData.id}`, "utf-8", async (err, description) => {
         const title = queryData.id;
         const files = await fs.readdirSync("./data");
         if (!files) console.log("파일들 없음");
-        const list = templateList(files);
-        const template = templateHTML(
+        const list = template.list(files);
+        const html = template.html(
           title,
           list,
           `<h2>${title}</h2>${description}`,
-          `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
+          `<a href="/create">create</a>
+           <a href="/update?id=${title}">update</a>
+           <form action="delete_process" method="post" onsubmit="if (!confirm('delete?')) return false;">
+            <input type="hidden" name="id" value="${title}">
+            <input type="submit" value="delete">
+           </form>
+          `
         );
 
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
         // response.end(fs.readFileSync(__dirname + url));
       });
     }
@@ -77,8 +57,8 @@ var app = http.createServer(async function (request, response) {
     const title = "Create";
     const files = await fs.readdirSync("./data");
     if (!files) console.log("파일들 없음");
-    const list = templateList(files);
-    const template = templateHTML(
+    const list = template.list(files);
+    const html = template.html(
       title,
       list,
       `
@@ -94,7 +74,7 @@ var app = http.createServer(async function (request, response) {
     );
 
     response.writeHead(200);
-    response.end(template);
+    response.end(html);
   } else if (pathname === "/create_process") {
     let body = "";
     let post = "";
@@ -118,8 +98,8 @@ var app = http.createServer(async function (request, response) {
       const title = queryData.id;
       const files = await fs.readdirSync("./data");
       if (!files) console.log("파일들 없음");
-      const list = templateList(files);
-      const template = templateHTML(
+      const list = template.list(files);
+      const html = template.html(
         title,
         list,
         `
@@ -136,7 +116,7 @@ var app = http.createServer(async function (request, response) {
       );
 
       response.writeHead(200);
-      response.end(template);
+      response.end(html);
     });
   } else if (pathname === "/update_process") {
     let body = "";
@@ -158,6 +138,24 @@ var app = http.createServer(async function (request, response) {
           response.writeHead(302, { Location: `/?id=${encodeURI(title)}` });
           response.end();
         });
+      });
+    });
+  } else if (pathname === "/delete_process") {
+    let body = "";
+    let post = "";
+    request.on("data", function (data) {
+      body += data;
+      if (body.length > 1e6) request.connection.destroy();
+    });
+    request.on("end", function () {
+      post = qs.parse(body);
+      const id = post.id;
+      console.log(post);
+      fs.unlink(`data/${id}`, async (err) => {
+        if (err) throw err;
+        console.log("File deleted.");
+        response.writeHead(302, { Location: `/` });
+        response.end();
       });
     });
   } else {
