@@ -6,3 +6,7 @@ nodejs/sessions
 config/google.json
 config/facebook.json
 .DS_Store
+
+**/db.local.js
+**/db.dev.js
+**/db.prod.js
