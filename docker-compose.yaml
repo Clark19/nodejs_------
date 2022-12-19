@@ -1,0 +1,20 @@
+version: "3.7"
+
+services:
+  board-egoing:
+    image: mysql:latest
+    container_name: mysql-container
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_HOST: localhost
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: board_egoing
+      MYSQL_ROOT_PASSWORD: 11
+      MYSQL_USER: user
+      MYSQL_PASSWORD: 11
+      TZ: Asia/Seoul
+    volumes:
+      - ./db/conf.d:/etc/mysql/conf.d
+      # - ./db/data:/var/lib/mysql
+      - ./db/initdb.d:/docker-entrypoint-initdb.d

@@ -10,3 +10,5 @@ config/facebook.json
 **/db.local.js
 **/db.dev.js
 **/db.prod.js
+
+db/data/*
