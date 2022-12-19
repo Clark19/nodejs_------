@@ -1,7 +1,7 @@
 version: "3.7"
 
 services:
-  board-egoing:
+  db-board-egoing:
     image: mysql:latest
     container_name: mysql-container
     ports:
@@ -14,7 +14,16 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: 11
       TZ: Asia/Seoul
+    # 윈도우에서 빌드시 my.cnf 파일 퍼미션 -rwxr-xr-x 일괄 설정 문제로 MariaDB에서
+    # "World-writable config file '/etc/mysql/conf.d/my.cnf' is ignored" 되서 데이터 삽입시 한글 깨져서 입력되고 길이제한 걸리기도 하는 문제 수정용
+    command:
+      [
+        "--character-set-server=utf8mb4",
+        "--skip-character-set-client-handshake",
+        "--collation-server=utf8mb4_unicode_ci",
+      ]
+
     volumes:
-      - ./db/conf.d:/etc/mysql/conf.d
+      # - ./db/conf.d:/etc/mysql/conf.d
       # - ./db/data:/var/lib/mysql
       - ./db/initdb.d:/docker-entrypoint-initdb.d
